@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ベイジの目安箱 📮</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf8f3; --surface: #ffffff; --accent: #e8614f;
+    --accent-light: #fde8e5; --text: #2d2523; --muted: #8c7b75;
+    --border: #ede5df; --heart: #e8614f;
+    --shadow: 0 2px 12px rgba(45,37,35,0.08); --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .header { background: var(--surface); border-bottom: 2px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .header-logo { display: flex; align-items: center; gap: 10px; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 18px; color: var(--text); text-decoration: none; }
+  .header-logo .icon { font-size: 24px; }
+  .header-logo .sub { font-size: 11px; font-weight: 400; color: var(--muted); display: block; line-height: 1; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .btn { border: none; border-radius: 24px; padding: 10px 20px; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #d4503f; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(232,97,79,0.35); }
+  .btn-primary:disabled { background: #ccc; transform: none; box-shadow: none; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 2px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-icon { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border); background: transparent; color: var(--muted); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .btn-icon:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .main { max-width: 680px; margin: 0 auto; padding: 32px 16px; }
+  .page-title { text-align: center; margin-bottom: 32px; }
+  .page-title .emoji { font-size: 48px; margin-bottom: 8px; display: block; }
+  .page-title h1 { font-family: 'Zen Maru Gothic', sans-serif; font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .page-title p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .error-banner { background: #fff3cd; border: 2px solid #ffc107; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: #856404; display: none; line-height: 1.6; }
+  .error-banner.show { display: block; }
+  .post-card { background: var(--surface); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow); border: 2px solid var(--border); }
+  .post-card h2 { font-family: 'Zen Maru Gothic', sans-serif; font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  textarea { width: 100%; border: 2px solid var(--border); border-radius: 12px; padding: 14px 16px; font-family: 'Noto Sans JP', sans-serif; font-size: 15px; line-height: 1.7; resize: none; outline: none; transition: border-color 0.2s; background: var(--bg); color: var(--text); }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: #c5b5ae; }
+  .char-count { text-align: right; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .char-count.warning { color: var(--accent); }
+  .anon-note { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin: 12px 0; }
+  .post-actions { display: flex; justify-content: flex-end; }
+  .stats-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .stat-chip { background: var(--surface); border: 2px solid var(--border); border-radius: 24px; padding: 8px 16px; font-size: 13px; display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow); }
+  .stat-chip strong { color: var(--accent); }
+  .opinions-list { display: flex; flex-direction: column; gap: 12px; }
+  .opinion-card { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border: 2px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .opinion-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(45,37,35,0.12); }
+  .opinion-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 12px; color: var(--muted); }
+  .opinion-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .opinion-text { font-size: 15px; line-height: 1.75; color: var(--text); margin-bottom: 16px; }
+  .opinion-footer { display: flex; align-items: center; justify-content: space-between; }
+  .heart-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 24px; border: 2px solid var(--border); background: white; cursor: pointer; font-size: 14px; font-weight: 700; transition: all 0.2s; color: var(--muted); font-family: 'Noto Sans JP', sans-serif; }
+  .heart-btn:hover:not(.hearted) { border-color: var(--heart); color: var(--heart); background: var(--accent-light); }
+  .heart-btn.hearted { border-color: var(--heart); color: var(--heart); background: var(--accent-light); }
+  .heart-btn .heart-icon { font-size: 16px; display: inline-block; }
+  .heart-pop { animation: heartPop 0.4s ease; }
+  @keyframes heartPop { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }
+  .opinion-date { font-size: 12px; color: var(--muted); }
+  .empty-state { text-align: center; padding: 48px 16px; color: var(--muted); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; display: block; }
+  .loading { text-align: center; padding: 48px 16px; color: var(--muted); }
+  .loading .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .tabs { display: flex; gap: 4px; background: var(--border); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+  .tab { flex: 1; padding: 10px; border: none; border-radius: 8px; background: transparent; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700; color: var(--muted); transition: all 0.2s; }
+  .tab.active { background: white; color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #2d2523; color: white; padding: 12px 24px; border-radius: 24px; font-size: 14px; font-weight: 700; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 999; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(45,37,35,0.45); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--surface); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 440px; box-shadow: 0 8px 40px rgba(45,37,35,0.2); transform: translateY(12px); transition: transform 0.25s cubic-bezier(0.34,1.2,0.64,1); }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .modal-header h3 { font-family: 'Zen Maru Gothic', sans-serif; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+  .modal-close { width: 32px; height: 32px; border: none; background: var(--border); border-radius: 50%; cursor: pointer; font-size: 16px; color: var(--muted); display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+  .modal-close:hover { background: var(--accent-light); color: var(--accent); }
+  .input-field { width: 100%; border: 2px solid var(--border); border-radius: 10px; padding: 10px 14px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; outline: none; background: var(--bg); }
+  .input-field:focus { border-color: var(--accent); }
+  .input-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 700; }
+  .input-group { margin-bottom: 12px; }
+  @media (max-width: 480px) { .page-title h1 { font-size: 22px; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a class="header-logo" href="#">
+    <span class="icon">📮</span>
+    <span>ベイジの目安箱<span class="sub">匿名で、気軽に意見を</span></span>
+  </a>
+  <div class="header-actions">
+    <button class="btn btn-primary" id="scrollToForm">✏️ 意見を投稿</button>
+    <button class="btn-icon" id="open-slack-modal" title="Slack連携設定（管理者用）">⚙️</button>
+  </div>
+</header>
+
+<div class="modal-overlay" id="slack-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚙️ Slack連携設定 <span style="font-size:11px;font-weight:400;color:var(--muted)">(管理者用)</span></h3>
+      <button class="modal-close" id="close-slack-modal">✕</button>
+    </div>
+    <div class="input-group">
+      <div class="input-label">Slack Webhook URL</div>
+      <input class="input-field" id="webhook-url" type="text" placeholder="https://hooks.slack.com/services/..." />
+    </div>
+    <div class="input-group">
+      <div class="input-label">通知チャンネル名（例: #free-目安箱）</div>
+      <input class="input-field" id="channel-name" type="text" placeholder="#free-目安箱" />
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+      <button class="btn btn-ghost" id="cancel-slack-modal" style="font-size:13px;">キャンセル</button>
+      <button class="btn btn-primary" id="save-slack" style="font-size:13px;">✅ 保存</button>
+    </div>
+  </div>
+</div>
+
+<main class="main">
+  <div class="page-title">
+    <span class="emoji">📮</span>
+    <h1>気になること、ありませんか？</h1>
+    <p>匿名で安心して意見を投稿できます。<br>共感した意見には❤️を押して、声を届けよう。</p>
+  </div>
+
+  <div class="error-banner" id="error-banner">
+    ⚠️ データベースに接続できません。<br>
+    Vercelの環境変数（SUPABASE_URL・SUPABASE_ANON_KEY）が正しく設定されているか確認してください。
+  </div>
+
+  <div class="post-card" id="post-form">
+    <h2>✏️ 意見を投稿する</h2>
+    <textarea id="opinion-input" placeholder="会社や仕事のことで、気になっていること・改善してほしいことを書いてみてください。どんな小さなことでも大歓迎です！" rows="5" maxlength="400"></textarea>
+    <div class="char-count" id="char-count">0 / 400</div>
+    <div class="anon-note">🔒 あなたの名前は一切記録されません。安心して投稿してください。</div>
+    <div class="post-actions">
+      <button class="btn btn-primary" id="post-btn">📮 投稿する</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-chip">📮 合計 <strong id="total-count">–</strong> 件</div>
+    <div class="stat-chip">❤️ 合計 <strong id="total-hearts">–</strong> いいね</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="new">🕐 新着順</button>
+    <button class="tab" data-tab="popular">🔥 共感順</button>
+  </div>
+
+  <div class="opinions-list" id="opinions-list">
+    <div class="loading"><div class="spinner"></div><p>読み込み中…</p></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// SupabaseのURLとキーを /api/config から取得します（Vercelデプロイ時に自動で読み込まれます）
+let SUPABASE_URL = '';
+let SUPABASE_KEY = '';
+
+const LIKED_KEY = 'baigie_liked_ids_v2';
+const SLACK_KEY = 'baigie_slack_config';
+const avatars = ['🐻','🦊','🐼','🐨','🦁','🐯','🐸','🐧','🦉','🐙','🦋','🌸','⭐','🌈','🍀'];
+
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || '',
+    },
+    ...opts
+  });
+  if (!res.ok && res.status !== 204) throw new Error(await res.text());
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+let opinions = [];
+let liked = (() => { try { return new Set(JSON.parse(localStorage.getItem(LIKED_KEY)) || []); } catch { return new Set(); } })();
+let currentTab = 'new';
+
+function saveLiked() { localStorage.setItem(LIKED_KEY, JSON.stringify([...liked])); }
+function loadSlack() { try { return JSON.parse(localStorage.getItem(SLACK_KEY)) || {}; } catch { return {}; } }
+function randomAvatar() { return avatars[Math.floor(Math.random() * avatars.length)]; }
+
+function updateStats() {
+  document.getElementById('total-count').textContent = opinions.length;
+  document.getElementById('total-hearts').textContent = opinions.reduce((s,o) => s + (o.hearts||0), 0);
+}
+
+function formatDate(ts) {
+  const diff = Date.now() - new Date(ts);
+  if (diff < 60000) return 'たった今';
+  if (diff < 3600000) return Math.floor(diff/60000) + '分前';
+  if (diff < 86400000) return Math.floor(diff/3600000) + '時間前';
+  const d = new Date(ts);
+  return (d.getMonth()+1) + '/' + d.getDate();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function renderOpinion(op) {
+  const isLiked = liked.has(op.id);
+  const card = document.createElement('div');
+  card.className = 'opinion-card';
+  card.dataset.id = op.id;
+  card.innerHTML =
+    '<div class="opinion-header"><div class="opinion-avatar">' + op.avatar + '</div><span>匿名さん</span></div>' +
+    '<div class="opinion-text">' + escapeHtml(op.text) + '</div>' +
+    '<div class="opinion-footer">' +
+      '<button class="heart-btn ' + (isLiked?'hearted':'') + '" data-id="' + op.id + '">' +
+        '<span class="heart-icon">' + (isLiked?'❤️':'🤍') + '</span>' +
+        '<span class="heart-count">' + (op.hearts||0) + '</span>' +
+      '</button>' +
+      '<span class="opinion-date">' + formatDate(op.created_at) + '</span>' +
+    '</div>';
+  return card;
+}
+
+function renderList() {
+  const list = document.getElementById('opinions-list');
+  list.innerHTML = '';
+  const sorted = [...opinions].sort((a,b) =>
+    currentTab === 'popular'
+      ? (b.hearts||0) - (a.hearts||0)
+      : new Date(b.created_at) - new Date(a.created_at)
+  );
+  if (!sorted.length) {
+    list.innerHTML = '<div class="empty-state"><span class="icon">📭</span><p>まだ投稿がありません。<br>最初の一言を届けてみましょう！</p></div>';
+    return;
+  }
+  sorted.forEach(op => list.appendChild(renderOpinion(op)));
+  list.querySelectorAll('.heart-btn').forEach(btn =>
+    btn.addEventListener('click', () => toggleHeart(btn.dataset.id, btn))
+  );
+}
+
+async function fetchOpinions() {
+  try {
+    opinions = await sbFetch('opinions?select=*&order=created_at.desc') || [];
+    document.getElementById('error-banner').classList.remove('show');
+    updateStats();
+    renderList();
+  } catch(e) {
+    document.getElementById('error-banner').classList.add('show');
+    document.getElementById('opinions-list').innerHTML =
+      '<div class="empty-state"><span class="icon">⚠️</span><p>データを読み込めませんでした。<br>環境変数の設定を確認してください。</p></div>';
+  }
+}
+
+async function toggleHeart(id, btn) {
+  const op = opinions.find(o => o.id === id);
+  if (!op) return;
+  const icon = btn.querySelector('.heart-icon');
+  const countEl = btn.querySelector('.heart-count');
+  if (liked.has(id)) {
+    liked.delete(id); op.hearts = Math.max(0,(op.hearts||0)-1);
+    btn.classList.remove('hearted'); icon.textContent = '🤍';
+  } else {
+    liked.add(id); op.hearts = (op.hearts||0)+1;
+    btn.classList.add('hearted'); icon.textContent = '❤️';
+    icon.classList.add('heart-pop'); setTimeout(function(){ icon.classList.remove('heart-pop'); }, 400);
+  }
+  countEl.textContent = op.hearts; saveLiked(); updateStats();
+  try { await sbFetch('opinions?id=eq.' + id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify({hearts:op.hearts}) }); }
+  catch(e) { console.error('heart update error', e); }
+}
+
+async function postOpinion() {
+  const input = document.getElementById('opinion-input');
+  const text = input.value.trim();
+  if (!text) { showToast('✏️ 内容を入力してください'); return; }
+  if (text.length > 400) { showToast('⚠️ 400文字以内で入力してください'); return; }
+  const btn = document.getElementById('post-btn');
+  btn.disabled = true; btn.textContent = '送信中…';
+  try {
+    const result = await sbFetch('opinions?select=*', {
+      method:'POST', prefer:'return=representation',
+      body: JSON.stringify({ text: text, hearts: 0, avatar: randomAvatar() })
+    });
+    const saved = Array.isArray(result) ? result[0] : result;
+    opinions.unshift(saved);
+    input.value = ''; document.getElementById('char-count').textContent = '0 / 400';
+    updateStats(); renderList();
+    showToast('📮 意見を届けました！ありがとうございます ✨');
+    sendToSlack(text);
+  } catch(e) {
+    showToast('⚠️ 投稿に失敗しました。接続を確認してください。');
+  }
+  btn.disabled = false; btn.innerHTML = '📮 投稿する';
+}
+
+async function sendToSlack(text) {
+  const cfg = loadSlack();
+  if (!cfg.webhookUrl) return;
+  try {
+    await fetch(cfg.webhookUrl, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ text: '📮 *ベイジの目安箱* に新しい意見が届きました！\n\n> ' + text + '\n\n_匿名の誰かより_' }),
+      mode:'no-cors'
+    });
+  } catch(e) {}
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+document.getElementById('opinion-input').addEventListener('input', function() {
+  const len = this.value.length;
+  const el = document.getElementById('char-count');
+  el.textContent = len + ' / 400';
+  el.classList.toggle('warning', len > 350);
+});
+document.getElementById('post-btn').addEventListener('click', postOpinion);
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+    tab.classList.add('active'); currentTab = tab.dataset.tab; renderList();
+  });
+});
+document.getElementById('scrollToForm').addEventListener('click', function() {
+  document.getElementById('post-form').scrollIntoView({behavior:'smooth'});
+  setTimeout(function(){ document.getElementById('opinion-input').focus(); }, 400);
+});
+
+function openModal() {
+  const cfg = loadSlack();
+  if (cfg.webhookUrl) document.getElementById('webhook-url').value = cfg.webhookUrl;
+  if (cfg.channelName) document.getElementById('channel-name').value = cfg.channelName;
+  document.getElementById('slack-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('slack-modal').classList.remove('open'); }
+document.getElementById('open-slack-modal').addEventListener('click', openModal);
+document.getElementById('close-slack-modal').addEventListener('click', closeModal);
+document.getElementById('cancel-slack-modal').addEventListener('click', closeModal);
+document.getElementById('slack-modal').addEventListener('click', function(e) {
+  if (e.target === e.currentTarget) closeModal();
+});
+document.getElementById('save-slack').addEventListener('click', function() {
+  localStorage.setItem(SLACK_KEY, JSON.stringify({
+    webhookUrl: document.getElementById('webhook-url').value.trim(),
+    channelName: document.getElementById('channel-name').value.trim()
+  }));
+  closeModal(); showToast('✅ Slack設定を保存しました');
+});
+
+// 起動：まず /api/config からSupabase接続情報を取得してから初期化
+async function init() {
+  try {
+    const cfg = await fetch('/api/config').then(function(r){ return r.json(); });
+    SUPABASE_URL = cfg.supabaseUrl;
+    SUPABASE_KEY = cfg.supabaseKey;
+    if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('env not set');
+    fetchOpinions();
+    setInterval(fetchOpinions, 30000);
+  } catch(e) {
+    document.getElementById('error-banner').classList.add('show');
+    document.getElementById('opinions-list').innerHTML =
+      '<div class="empty-state"><span class="icon">⚙️</span><p>Vercelの環境変数が未設定です。<br>設定後、再デプロイしてください。</p></div>';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
