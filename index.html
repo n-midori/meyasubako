@@ -14,12 +14,8 @@
     --shadow: 0 2px 12px rgba(45,37,35,0.08); --radius: 16px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-  .header { background: var(--surface); border-bottom: 2px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-  .header-logo { display: flex; align-items: center; gap: 10px; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 18px; color: var(--text); text-decoration: none; }
-  .header-logo .icon { font-size: 24px; }
-  .header-logo .sub { font-size: 11px; font-weight: 400; color: var(--muted); display: block; line-height: 1; }
-  .header-actions { display: flex; gap: 8px; align-items: center; }
+  body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; position: relative; }
+  .settings-btn { position: absolute; top: 16px; right: 16px; }
   .btn { border: none; border-radius: 24px; padding: 10px 20px; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
   .btn-primary { background: var(--accent); color: white; }
   .btn-primary:hover { background: #d4503f; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(232,97,79,0.35); }
@@ -42,8 +38,10 @@
   textarea::placeholder { color: #c5b5ae; }
   .char-count { text-align: right; font-size: 12px; color: var(--muted); margin-top: 6px; }
   .char-count.warning { color: var(--accent); }
-  .anon-note { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin: 12px 0; }
-  .post-actions { display: flex; justify-content: flex-end; }
+  .anon-note { display: none; }
+  .post-actions { display: flex; justify-content: center; }
+  .post-actions .btn { min-width: 240px; justify-content: center; }
+  .page-title .service-name { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: block; letter-spacing: 0.05em; font-weight: 700; font-family: 'Zen Maru Gothic', sans-serif; }
   .stats-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
   .stat-chip { background: var(--surface); border: 2px solid var(--border); border-radius: 24px; padding: 8px 16px; font-size: 13px; display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow); }
   .stat-chip strong { color: var(--accent); }
@@ -89,16 +87,7 @@
 </head>
 <body>
 
-<header class="header">
-  <a class="header-logo" href="#">
-    <span class="icon">📮</span>
-    <span>ベイジの目安箱<span class="sub">匿名で、気軽に意見を</span></span>
-  </a>
-  <div class="header-actions">
-    <button class="btn btn-primary" id="scrollToForm">✏️ 意見を投稿</button>
-    <button class="btn-icon" id="open-slack-modal" title="Slack連携設定（管理者用）">⚙️</button>
-  </div>
-</header>
+<button class="btn-icon settings-btn" id="open-slack-modal" title="Slack連携設定（管理者用）">⚙️</button>
 
 <div class="modal-overlay" id="slack-modal">
   <div class="modal">
@@ -124,6 +113,7 @@
 <main class="main">
   <div class="page-title">
     <span class="emoji">📮</span>
+    <span class="service-name">ベイジの目安箱</span>
     <h1>気になること、ありませんか？</h1>
     <p>匿名で安心して意見を投稿できます。<br>共感した意見には❤️を押して、声を届けよう。</p>
   </div>
@@ -135,8 +125,8 @@
 
   <div class="post-card" id="post-form">
     <h2>✏️ 意見を投稿する</h2>
-    <textarea id="opinion-input" placeholder="会社や仕事のことで、気になっていること・改善してほしいことを書いてみてください。どんな小さなことでも大歓迎です！" rows="5" maxlength="400"></textarea>
-    <div class="char-count" id="char-count">0 / 400</div>
+    <textarea id="opinion-input" placeholder="会社や仕事のことで、気になっていること・改善してほしいことを書いてみてください。どんな小さなことでも大歓迎です！" rows="3" maxlength="200"></textarea>
+    <div class="char-count" id="char-count">0 / 200</div>
     <div class="anon-note">🔒 あなたの名前は一切記録されません。安心して投稿してください。</div>
     <div class="post-actions">
       <button class="btn btn-primary" id="post-btn">📮 投稿する</button>
@@ -281,7 +271,7 @@ async function postOpinion() {
   const input = document.getElementById('opinion-input');
   const text = input.value.trim();
   if (!text) { showToast('✏️ 内容を入力してください'); return; }
-  if (text.length > 400) { showToast('⚠️ 400文字以内で入力してください'); return; }
+  if (text.length > 200) { showToast('⚠️ 200文字以内で入力してください'); return; }
   const btn = document.getElementById('post-btn');
   btn.disabled = true; btn.textContent = '送信中…';
   try {
@@ -291,7 +281,7 @@ async function postOpinion() {
     });
     const saved = Array.isArray(result) ? result[0] : result;
     opinions.unshift(saved);
-    input.value = ''; document.getElementById('char-count').textContent = '0 / 400';
+    input.value = ''; document.getElementById('char-count').textContent = '0 / 200';
     updateStats(); renderList();
     showToast('📮 意見を届けました！ありがとうございます ✨');
     sendToSlack(text);
@@ -322,8 +312,8 @@ function showToast(msg) {
 document.getElementById('opinion-input').addEventListener('input', function() {
   const len = this.value.length;
   const el = document.getElementById('char-count');
-  el.textContent = len + ' / 400';
-  el.classList.toggle('warning', len > 350);
+  el.textContent = len + ' / 200';
+  el.classList.toggle('warning', len > 170);
 });
 document.getElementById('post-btn').addEventListener('click', postOpinion);
 document.querySelectorAll('.tab').forEach(function(tab) {
@@ -332,10 +322,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     tab.classList.add('active'); currentTab = tab.dataset.tab; renderList();
   });
 });
-document.getElementById('scrollToForm').addEventListener('click', function() {
-  document.getElementById('post-form').scrollIntoView({behavior:'smooth'});
-  setTimeout(function(){ document.getElementById('opinion-input').focus(); }, 400);
-});
+// scrollToFormボタンは削除済み
 
 function openModal() {
   const cfg = loadSlack();
